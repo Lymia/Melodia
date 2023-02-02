@@ -1,24 +1,50 @@
 ﻿namespace CrystalLoad;
 
 using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 
-using SDL2;
+internal static class CrystalLoad {
+    private static readonly string VersionString;
+    static CrystalLoad()
+    {
+        Version ver = new Version(typeof(CrystalLoad).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true).OfType<AssemblyFileVersionAttribute>().First().Version);
+        VersionString = $"{ver.Major}.{ver.Minor}.{ver.Build}";
+    }    
 
-class CrystalLoad {
-    private static void ErrorMsgBox(string msg) {
-        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "CrystalLoad Error", msg, IntPtr.Zero);
-        throw new Exception(msg);
+    private static void MainBody(string[] args) {
+        if (args.Length != 1) 
+            throw new Exception("Not enough arguments passed to CrystalLoad Main!");
+
+        Log.Trace($"Target .dll to load: {args[0]}");
+        
+        ProcessLauncher.StartProcess(new LoaderOptions(AppDomain.CurrentDomain.BaseDirectory), new string[0]);
     }
 
-    static void Main(string[] args)
+    [LoaderOptimization(LoaderOptimization.MultiDomain)]
+    internal static void Main(string[] args)
     {
-        if (args.Length != 2) 
-            ErrorMsgBox("Not enough arguments passed to CrystalLoad Main!");
+        Log.InitLogging();
+        Log.Trace($"CrystalLoad version {VersionString}");
+        Log.Trace();
 
-        Console.WriteLine("CrystalLoad by AuroraAmissa");
-        Console.WriteLine();
-        Console.WriteLine($"Target .dll to load: {args[0]}");
-        Console.WriteLine($"Path to Crystal Project: {args[1]}");
-        Console.WriteLine();
+        try {
+            MainBody(args);
+        } catch (CrystalLoadException e) {
+            Log.Error(e.Message);
+        } catch (Exception e) {
+            Log.Error(null, e);
+        }
+
+        if (Log.ErrorLogged) {
+            Log.MsgBox("Errors encountered during loading process. A log file will be opened.");
+
+            using (var p = new Process()) {
+                p.StartInfo.UseShellExecute = true;
+                p.StartInfo.FileName = Log.LogFileLocation;
+                p.Start();
+            }
+        }
     }
 }

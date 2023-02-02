@@ -1,3 +1,5 @@
+namespace CrystalPatcher;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,14 +7,11 @@ using System.Reflection;
 using SDL2;
 using Steamworks;
 
-namespace CrystalLoad;
-
 internal sealed class TargetDomainCallback : PersistantRemoteObject {
     private string? gameDirectory;
     private readonly Dictionary<string, byte[]> patchedAssemblies = new Dictionary<string, byte[]>();
 
     private readonly Assembly myAssembly = Assembly.GetAssembly(typeof(TargetDomainCallback));
-
     internal void Init(string gameDirectory, LogRemoteReceiver logRemote) {
         this.gameDirectory = gameDirectory;
         Log.InitLoggingForChildDomain(logRemote);
@@ -57,7 +56,7 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
 
 public static class Callbacks {
     public static void OnException(Exception e) {
-        Log.Error("Crystal Load encountered unexpected error.", e);
+        Log.Error("CrystalPatcher encountered unexpected error.", e);
     }
     public static bool RestartAppIfNecessary(AppId_t unOwnAppID) {
         Log.Trace("Intercepting RestartAppIfNecessary.");

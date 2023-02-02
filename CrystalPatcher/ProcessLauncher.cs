@@ -1,4 +1,4 @@
-namespace CrystalLoad;
+namespace CrystalPatcher;
 
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
@@ -9,9 +9,9 @@ using System.IO;
 using System.Security;
 using System.Threading;
 
-// TODO: Redo the loading so we can have references from CrystalLoad.exe / other dlls into stuff properly.
+// TODO: Redo the loading so we can have references from CrystalPatcher.exe / other dlls into stuff properly.
 
-internal class LoaderOptions {
+internal sealed class LoaderOptions {
     public readonly string GameDirectory;
 
     public bool AchievementsEnabled = true;
@@ -135,7 +135,7 @@ internal static class ProcessLauncher {
         var appDomain = AppDomain.CreateDomain("Crystal Project", null, setup, FULL_TRUST);
 
         Log.Debug(" - Creating remote callback.");
-        var callbackObj = appDomain.CreateInstance("CrystalLoad", typeof(TargetDomainCallback).FullName);
+        var callbackObj = appDomain.CreateInstance("CrystalPatcher", typeof(TargetDomainCallback).FullName);
         var callback = (TargetDomainCallback) callbackObj.Unwrap();
 
         callback.Init(options.GameDirectory, Log.RemoteReceiver);

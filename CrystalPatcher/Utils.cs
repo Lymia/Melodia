@@ -1,4 +1,4 @@
-namespace CrystalLoad;
+namespace CrystalPatcher;
 
 using SDL2;
 using System;
@@ -80,8 +80,8 @@ internal class LogRemoteReceiverNull : LogRemoteReceiver {
 /// <summary>
 /// Exceptions of this type are printed directly to console with no stack trace or message type.
 /// </summary>
-public sealed class CrystalLoadException : Exception {
-    public CrystalLoadException(string message) : base(message) { }
+public sealed class CrystalPatcherException : Exception {
+    public CrystalPatcherException(string message) : base(message) { }
 }
 
 public static class Log
@@ -97,7 +97,7 @@ public static class Log
     [MethodImpl(MethodImplOptions.Synchronized)]
     internal static void InitLogging()
     {
-        RemoteReceiver = new LogRemoteReceiverImpl(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CrystalLoad.log"));
+        RemoteReceiver = new LogRemoteReceiverImpl(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CrystalPatcher.log"));
         LogPrefix = " ";
     }
 
@@ -156,6 +156,6 @@ public static class Log
     }
 
     internal static void MsgBox(string msg) {
-        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "CrystalLoad", msg, IntPtr.Zero);
+        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "CrystalPatcher", msg, IntPtr.Zero);
     }
 }

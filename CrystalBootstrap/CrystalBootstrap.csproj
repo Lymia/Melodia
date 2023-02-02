@@ -5,22 +5,13 @@
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
-    <Product>CrystalLoad</Product>
-    <AssemblyTitle>CrystalLoad</AssemblyTitle>
+    <Product>CrystalBootstrap</Product>
+    <AssemblyTitle>CrystalBootstrap</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="TOOLS">
       <HintPath>../contrib/CrystalProjectLinux/FNA.dll</HintPath>
     </Reference>
-    <Reference Include="TOOLS">
-      <HintPath>../contrib/CrystalProjectLinux/Steamworks.NET.dll</HintPath>
-    </Reference>
-    <Reference Include="TOOLS">
-      <HintPath>../contrib/CrystalProjectLinux/Crystal Project.exe</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="dnlib" Version="3.6.0" />
   </ItemGroup>
 </Project>

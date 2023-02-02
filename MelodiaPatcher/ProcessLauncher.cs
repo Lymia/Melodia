@@ -1,4 +1,4 @@
-namespace CrystalPatcher;
+namespace Melodia.Patcher;
 
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
@@ -135,7 +135,7 @@ internal static class ProcessLauncher {
         var appDomain = AppDomain.CreateDomain("Crystal Project", null, setup, FULL_TRUST);
 
         Log.Debug(" - Creating remote callback.");
-        var callbackObj = appDomain.CreateInstance("CrystalPatcher", typeof(TargetDomainCallback).FullName);
+        var callbackObj = appDomain.CreateInstance(Program.AssemblyNameString, typeof(TargetDomainCallback).FullName);
         var callback = (TargetDomainCallback) callbackObj.Unwrap();
 
         callback.Init(options.GameDirectory, Log.RemoteReceiver);

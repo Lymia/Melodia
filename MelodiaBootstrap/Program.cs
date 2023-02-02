@@ -1,4 +1,4 @@
-﻿namespace CrystalBootstrap;
+﻿namespace Melodia.Bootstrap;
 
 using System;
 using System.IO;
@@ -8,29 +8,22 @@ using System.Security;
 using System.Threading;
 using SDL2;
 
-internal sealed class CrystalBootstrapException : Exception {
-    public CrystalBootstrapException(string message) : base(message) { }
+internal sealed class BootstrapException : Exception {
+    public BootstrapException(string message) : base(message) { }
 }
 
-internal static class CrystalBootstrap {
-    private static readonly string VersionString;
-    static CrystalBootstrap()
-    {
-        Version ver = new Version(typeof(CrystalBootstrap).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true).OfType<AssemblyFileVersionAttribute>().First().Version);
-        VersionString = $"{ver.Major}.{ver.Minor}.{ver.Build}";
-    }
-
+internal static class Program {
     private static readonly NamedPermissionSet FULL_TRUST = new NamedPermissionSet("FullTrust");
 
     private static void MsgBox(string msg) {
-        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "CrystalPatcher Bootstrap", msg, IntPtr.Zero);
+        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "MelodiaBootstrap", msg, IntPtr.Zero);
     }
     
     private static Thread BootstrapProcess(string gameDirectory, string appDirectory, string appName) {
         var setup = new AppDomainSetup
         {
             ApplicationBase = appDirectory,
-            ApplicationName = "CrystalPatcher",
+            ApplicationName = appName,
             DisallowCodeDownload = true,
             DisallowPublisherPolicy = true
         };
@@ -50,18 +43,18 @@ internal static class CrystalBootstrap {
 
     private static void MainBody(string[] args) {
         if (args.Length != 2) 
-            throw new CrystalBootstrapException("Please do not execute this application directly.");
+            throw new BootstrapException("Please do not execute this application directly.");
 
         var gameDirectory = AppDomain.CurrentDomain.BaseDirectory;
         var appDirectory = args[0];
         var appName = args[1];
 
         if (!File.Exists(gameDirectory))
-            throw new CrystalBootstrapException("Game directory not found or is invalid.");
+            throw new BootstrapException("Game directory not found or is invalid.");
         if (!File.Exists(appDirectory))
-            throw new CrystalBootstrapException("Application directory not found or is invalid.");
+            throw new BootstrapException("Application directory not found or is invalid.");
 
-        Console.WriteLine($"CrystalBootstrap: Loading assembly '{appName}' from directory '{appDirectory}'");
+        Console.WriteLine($"MelodiaBootstrap: Loading assembly '{appName}' from directory '{appDirectory}'");
 
         BootstrapProcess(gameDirectory, appDirectory, appName);
     }
@@ -71,7 +64,7 @@ internal static class CrystalBootstrap {
     {
         try {
             MainBody(args);
-        } catch (CrystalBootstrapException e) {
+        } catch (BootstrapException e) {
             MsgBox(e.Message);
         } catch (Exception e) {
             MsgBox($"Error encountered during bootstrap process: {e}");

@@ -1,21 +1,24 @@
-﻿namespace CrystalPatcher;
+﻿namespace Melodia.Patcher;
 
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
-internal static class CrystalPatcher {
-    private static readonly string VersionString;
-    static CrystalPatcher()
+internal static class Program {
+    internal static readonly string VersionString;
+    internal static readonly string AssemblyNameString;
+    static Program()
     {
-        Version ver = new Version(typeof(CrystalPatcher).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true).OfType<AssemblyFileVersionAttribute>().First().Version);
+        var assembly = typeof(Program).Assembly;
+        var ver = new Version(assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true).OfType<AssemblyFileVersionAttribute>().First().Version);
         VersionString = $"{ver.Major}.{ver.Minor}.{ver.Build}";
+        AssemblyNameString = assembly.FullName;
     }    
 
     private static void MainBody(string[] args) {
         if (args.Length != 1) 
-            throw new Exception("Not enough arguments passed to CrystalPatcher Main!");
+            throw new Exception($"Not enough arguments passed to {AssemblyNameString}!");
 
         Log.Trace($"Target .dll to load: {args[0]}");
         
@@ -26,12 +29,12 @@ internal static class CrystalPatcher {
     internal static void Main(string[] args)
     {
         Log.InitLogging();
-        Log.Trace($"CrystalPatcher version {VersionString}");
+        Log.Trace($"{AssemblyNameString} version {VersionString}");
         Log.Trace();
 
         try {
             MainBody(args);
-        } catch (CrystalPatcherException e) {
+        } catch (PatcherException e) {
             Log.Error(e.Message);
         } catch (Exception e) {
             Log.Error(null, e);

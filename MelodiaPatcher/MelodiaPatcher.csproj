@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
-    <Product>CrystalPatcher</Product>
-    <AssemblyTitle>CrystalPatcher</AssemblyTitle>
+    <Product>MelodiaPatcher</Product>
+    <AssemblyTitle>CrystalPaMelodiaPatchertcher</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>

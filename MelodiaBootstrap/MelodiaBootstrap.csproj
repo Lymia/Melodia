@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
-    <Product>CrystalBootstrap</Product>
-    <AssemblyTitle>CrystalBootstrap</AssemblyTitle>
+    <Product>MelodiaBootstrap</Product>
+    <AssemblyTitle>MelodiaBootstrap</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>

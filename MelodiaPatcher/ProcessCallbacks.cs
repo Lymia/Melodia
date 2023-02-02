@@ -1,4 +1,4 @@
-namespace CrystalPatcher;
+namespace Melodia.Patcher;
 
 using System;
 using System.Collections.Generic;
@@ -56,7 +56,7 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
 
 public static class Callbacks {
     public static void OnException(Exception e) {
-        Log.Error("CrystalPatcher encountered unexpected error.", e);
+        Log.Error($"{Program.AssemblyNameString} encountered unexpected error.", e);
     }
     public static bool RestartAppIfNecessary(AppId_t unOwnAppID) {
         Log.Trace("Intercepting RestartAppIfNecessary.");

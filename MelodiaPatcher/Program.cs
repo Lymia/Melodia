@@ -1,5 +1,6 @@
 ﻿namespace Melodia.Patcher;
 
+using Melodia.Common;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -17,18 +18,21 @@ internal static class Program {
     }    
 
     private static void MainBody(string[] args) {
-        if (args.Length < 1) 
+        if (args.Length < 2) 
             throw new Exception($"Not enough arguments passed to {AssemblyNameString}!");
 
         Log.Trace($"Game Directory: {args[0]}");
+        Log.Trace($"Base Directory: {args[1]}");
         
-        ProcessLauncher.StartProcess(new LoaderOptions(args[0]), new string[0]);
+        var options = new LoaderOptions(args[0], args[1]);
+        options.AddPlugin(new BuiltinPlugin());
+        ProcessLauncher.StartProcess(options, args.Skip(2).ToArray());
     }
 
     [LoaderOptimization(LoaderOptimization.MultiDomain)]
     internal static void Main(string[] args)
     {
-        Log.InitLogging();
+        Log.InitLogging(AssemblyNameString);
         Log.Trace($"{AssemblyNameString} version {VersionString}");
         Log.Trace();
 

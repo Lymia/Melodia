@@ -5,6 +5,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MelodiaBootstrap", "Melodia
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MelodiaPatcher", "MelodiaPatcher\MelodiaPatcher.csproj", "{587F28D2-2192-48A6-9FAB-CC8D058E7B45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Melodia.Common", "Melodia.Common\Melodia.Common.csproj", "{587F28D2-2192-48A6-9FAB-CC8D058E7B45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Melodia.CoreCallbacks", "Melodia.CoreCallbacks\Melodia.CoreCallbacks.csproj", "{587F28D2-2192-48A6-9FAB-CC8D058E7B45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

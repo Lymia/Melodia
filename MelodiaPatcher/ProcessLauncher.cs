@@ -1,68 +1,85 @@
 namespace Melodia.Patcher;
 
+using Melodia.Common;
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
-using dnlib.DotNet.Writer;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Security;
 using System.Threading;
-
-// TODO: Redo the loading so we can have references from CrystalPatcher.exe / other dlls into stuff properly.
+using System.Collections.Generic;
+using System.Reflection;
 
 internal sealed class LoaderOptions {
     public readonly string GameDirectory;
+    public readonly string BaseDirectory;
+    public readonly List<Plugin> Plugins = new List<Plugin>();
 
-    public bool AchievementsEnabled = true;
+    internal string[] PluginPath => new string[] { 
+        Path.Combine(BaseDirectory, "lib/modules_guest"),
+        GameDirectory,
+    };
 
-    public LoaderOptions(string gameDirectory)
+    public LoaderOptions(string gameDirectory, string baseDirectory)
     {
         GameDirectory = gameDirectory;
+        BaseDirectory = baseDirectory;
+    }
+
+    public LoaderOptions AddPlugin(Plugin plugin) {
+        this.Plugins.Add(plugin);
+        return this;
+    }
+
+    public bool CheckAchivementsEnabled() {
+        foreach (var plugin in Plugins) {
+            if (plugin.InvalidatesAchievements) return false;
+        }
+        return true;
+    }
+}
+
+internal sealed class TargetDomainCallback : PersistantRemoteObject {
+    private string? gameDirectory;
+    private PatcherContext patcherContext = new PatcherContext(new string[0]);
+    private Dictionary<string, byte[]> patchedAssemblies = new Dictionary<string, byte[]>();
+    private readonly Assembly myAssembly = Assembly.GetAssembly(typeof(TargetDomainCallback));
+
+    internal void Init(string gameDirectory, LogDomainSynchronizer logLocal) {
+        this.gameDirectory = gameDirectory;
+        Log.Synchronizer.InitializeFromDomain(logLocal);
+        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+    }
+    internal void CommitPatcher(PatcherContext context) {
+        this.patchedAssemblies = context.CommitModified();
+        this.patcherContext = context;
+    }
+
+    private Assembly? ResolveAssembly(Object sender, ResolveEventArgs ev) {
+        Log.Debug($"Handling ResolveAssembly event for {ev.Name}");
+        
+        if (ev.Name == myAssembly.FullName) {
+            Log.Debug(" - Using callback assembly");
+            return myAssembly;
+        }
+
+        string name = ev.Name.Split(',')[0].Trim();
+
+        if (patchedAssemblies.ContainsKey(name)) {
+            Log.Debug(" - Using patched assembly");
+            return Assembly.Load(patchedAssemblies[name]);
+        }
+
+        var path = patcherContext.FindAssemblyPath(name);
+        if (path != null) return Assembly.LoadFrom(path);
+
+        return null;
     }
 }
 
 internal static class ProcessLauncher {
     private static readonly NamedPermissionSet FULL_TRUST = new NamedPermissionSet("FullTrust");
-
-    private static AssemblyDef LoadAssembly(string gameDirectory, string name) {
-        var path = Path.Combine(gameDirectory, name);
-        var expectedName = Path.GetFileNameWithoutExtension(name);
-        var assembly = AssemblyDef.Load(path);
-        Trace.Assert(assembly.Name == expectedName, $"{name} does not contain the correct assembly!");
-        return assembly;
-    }
-
-    private static void AddOverride(TargetDomainCallback callback, AssemblyDef assembly, string? assemblyName = null) {
-        Log.Debug($" - Adding patched assembly for {assembly.Name}");
-
-        var settings = new ModuleWriterOptions(assembly.ManifestModule);
-
-        var patchedData = new MemoryStream();
-        assembly.Write(patchedData, settings);
-        callback.AddOverride(assemblyName ?? assembly.Name, patchedData.ToArray());
-    }
-
-    private const string RestartAppIfNecessary = 
-        "System.Boolean Steamworks.SteamAPI::RestartAppIfNecessary(Steamworks.AppId_t)";
-    private static void DisableSteamRelaunch(AssemblyDef assembly)
-    {
-        var imp = new Importer(assembly.ManifestModule);
-        var type = assembly.ManifestModule.Find("Sang.Utility.SteamManager", false);
-        
-        var method = type.FindMethod("Initialize");
-
-        for (int i = 0; i < method.Body.Instructions.Count; i++)
-        {
-            if (method.Body.Instructions[i].OpCode != OpCodes.Call) continue;
-            var target = (IMethod)method.Body.Instructions[i].Operand;
-            if (target.FullName != RestartAppIfNecessary) continue;
-
-            method.Body.Instructions[i].Operand = imp.Import(typeof(Callbacks).GetMethod("RestartAppIfNecessary"));
-
-            break;
-        }
-    }
 
     private static void DisableSteamAchievements(AssemblyDef assembly)
     {
@@ -75,45 +92,6 @@ internal static class ProcessLauncher {
         method.Body = new CilBody { MaxStack = 1 };
         method.Body.Instructions.Add(OpCodes.Ldarg_1.ToInstruction());
         method.Body.Instructions.Add(OpCodes.Ret.ToInstruction());
-    }
-    
-    private static void sillysillyfairy(AssemblyDef assembly)
-    {
-        var imp = new Importer(assembly.ManifestModule);
-        var type = assembly.ManifestModule.Find("Sang.Window.Title.WindowTitleFooter", false);
-        
-        var method = type.FindMethod("Draw");
-
-        for (int i = 0; i < method.Body.Instructions.Count; i++)
-        {
-            if (method.Body.Instructions[i].OpCode != OpCodes.Ldstr) continue;
-            var target = (string)method.Body.Instructions[i].Operand;
-            Console.WriteLine(target);
-            Console.WriteLine("Andrew Willman 2017-2022");
-            Console.WriteLine(target == "Andrew Willman 2017-2022");
-            if (target != "Andrew Willman 2017-2022") continue;
-
-            method.Body.Instructions[i].Operand = (String) "Lymia was here :D XD :3";
-
-            break;
-        }
-    }
-
-    private static void PatchApplication(LoaderOptions options, TargetDomainCallback callback)
-    {
-        var assembly = LoadAssembly(options.GameDirectory, "Crystal Project.exe");
-
-        Log.Debug("   - Disabling Steam Relaunch...");
-        DisableSteamRelaunch(assembly);
-
-        if (!options.AchievementsEnabled) {
-            Log.Debug("   - Disabling achievements...");
-            DisableSteamAchievements(assembly);
-        }
-
-        sillysillyfairy(assembly);
-
-        AddOverride(callback, assembly, "Crystal Project");
     }
 
     public static Thread StartProcess(LoaderOptions options, string[] args)
@@ -138,10 +116,22 @@ internal static class ProcessLauncher {
         var callbackObj = appDomain.CreateInstance(Program.AssemblyNameString, typeof(TargetDomainCallback).FullName);
         var callback = (TargetDomainCallback) callbackObj.Unwrap();
 
-        callback.Init(options.GameDirectory, Log.RemoteReceiver);
+        callback.Init(options.GameDirectory, Log.Synchronizer);
 
-        Log.Debug(" - Patching Crystal Project");
-        PatchApplication(options, callback);
+        Log.Debug(" - Patching executables.");
+        var patchContext = new PatcherContext(options.PluginPath);
+        foreach (var plugin in options.Plugins) {
+            Log.Debug($"   - Running plugin {plugin.GetType().FullName}.");
+            plugin.Patch(patchContext);
+        }
+
+        // We hardcode this here to avoid having to do the mess of passing this information on to the plugins.
+        if (!options.CheckAchivementsEnabled()) {
+            DisableSteamAchievements(patchContext.LoadAssembly("Crystal Project"));
+            patchContext.MarkAssemblyModified("Crystal Project");
+        }
+
+        callback.CommitPatcher(patchContext);
 
         Log.Debug(" - Setting up environment.");
         Environment.CurrentDirectory = options.GameDirectory;

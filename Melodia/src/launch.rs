@@ -43,10 +43,14 @@ fn launch_bin(game_dir: &Path, base_dir: &Path, temp_dir: &Path, bin: &Path) -> 
     let patcher_dir = resolve_chk(base_dir, "lib/patcher")?;
 
     let mut args = Vec::new();
+    // arguments for MelodiaBootstrap
     args.push(game_dir.as_os_str().to_owned());
     args.push(patcher_dir.as_os_str().to_owned());
     args.push(OsString::from("MelodiaPatcher"));
+    // arguments for MelodiaPatcher
     args.push(game_dir.as_os_str().to_owned());
+    args.push(base_dir.as_os_str().to_owned());
+    // user arguments
     args.extend(std::env::args_os().skip(1));
 
     let mut child = Command::new(bin).current_dir(temp_dir).args(args).spawn()?;
@@ -56,15 +60,18 @@ fn launch_bin(game_dir: &Path, base_dir: &Path, temp_dir: &Path, bin: &Path) -> 
 
 #[cfg(target_os = "linux")]
 fn launch_game(temp_dir: &Path, base_dir: &Path, game_dir: &Path) -> Result<()> {
-    // Symlink Mono files
+    // Copy the main mono executable
     fs::copy(
         resolve_chk(game_dir, "Crystal Project.bin.x86_64")?,
         resolve(temp_dir, "MelodiaBootstrap.bin.x86_64"),
     )?;
+
+    // Symlink Mono files
     symlink_dir(game_dir, temp_dir, "lib64")?;
     symlink(game_dir, temp_dir, "monoconfig")?;
     symlink(game_dir, temp_dir, "monomachineconfig")?;
-    symlink(game_dir, temp_dir, "Steamworks.NET.dll")?; // TODO: Figure out how to avoid this!!
+
+    // Symlink important core libraries
     for file in fs::read_dir(game_dir)? {
         let file = file?;
         if let Some(name) = file.file_name().to_str() {

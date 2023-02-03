@@ -1,19 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net4.5.2</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
-    <Product>MelodiaPatcher</Product>
-    <AssemblyTitle>CrystalPaMelodiaPatchertcher</AssemblyTitle>
+    <Product>Melodia.CoreCallbacks</Product>
+    <AssemblyTitle>Melodia.CoreCallbacks</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="TOOLS">
-      <HintPath>../contrib/CrystalProjectLinux/FNA.dll</HintPath>
+      <HintPath>../contrib/CrystalProjectLinux/Steamworks.NET.dll</HintPath>
     </Reference>
-    <PackageReference Include="dnlib" Version="3.6.0" />
     <ProjectReference Include="../Melodia.Common/Melodia.Common.csproj" /> 
   </ItemGroup>
 </Project>

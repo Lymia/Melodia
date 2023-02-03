@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net4.5.2</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
-    <Product>MelodiaPatcher</Product>
-    <AssemblyTitle>CrystalPaMelodiaPatchertcher</AssemblyTitle>
+    <Product>Melodia.Common</Product>
+    <AssemblyTitle>Melodia.Common</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -14,6 +14,5 @@
       <HintPath>../contrib/CrystalProjectLinux/FNA.dll</HintPath>
     </Reference>
     <PackageReference Include="dnlib" Version="3.6.0" />
-    <ProjectReference Include="../Melodia.Common/Melodia.Common.csproj" /> 
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-namespace Melodia.Patcher;
+namespace Melodia.Common;
 
 using SDL2;
 using System;
@@ -13,19 +13,13 @@ using System.Text.RegularExpressions;
 /// from happening. Since we only ever create a small handful of remote objects, this isn't
 /// an issue.
 /// </summary>
-internal abstract class PersistantRemoteObject : MarshalByRefObject
+public abstract class PersistantRemoteObject : MarshalByRefObject
 {
     [SecurityPermissionAttribute(SecurityAction.Demand, Flags = SecurityPermissionFlag.Infrastructure)]
     public override object? InitializeLifetimeService()
     {
         return null;
     }
-}
-
-internal static partial class Utils
-{
-    public static string NormalizeLineEndings(string data) =>
-        Regex.Replace(data, @"\r\n?|\n", "\r\n");
 }
 
 internal interface LogRemoteReceiver {
@@ -37,7 +31,7 @@ internal interface LogRemoteReceiver {
 internal class LogRemoteReceiverImpl : PersistantRemoteObject, LogRemoteReceiver
 {
     private StreamWriter? outStream;
-    public string? LogFileLocation { get { return LogFileLocationInternal; } }
+    public string? LogFileLocation { get => LogFileLocationInternal; }
     public bool ErrorLogged { get; set; } = false;
 
     string? LogFileLocationInternal;
@@ -59,11 +53,14 @@ internal class LogRemoteReceiverImpl : PersistantRemoteObject, LogRemoteReceiver
         }
     }
 
+    public static string NormalizeLineEndings(string data) =>
+        Regex.Replace(data, @"\r\n?|\n", "\r\n");
+
     [MethodImpl(MethodImplOptions.Synchronized)]
     public void WriteLogFile(string taggedMsg)
     {
         if (outStream == null) return;
-        outStream.WriteLine(Utils.NormalizeLineEndings($"[{DateTime.Now}] {taggedMsg}"));
+        outStream.WriteLine(NormalizeLineEndings($"[{DateTime.Now}] {taggedMsg}"));
         outStream.Flush();
     }
 }
@@ -81,24 +78,53 @@ public sealed class PatcherException : Exception {
     public PatcherException(string message) : base(message) { }
 }
 
+/// <summary>
+/// A class that allows for synchromizing logging between two domains.
+/// </summary>
+public sealed class LogDomainSynchronizer : PersistantRemoteObject {
+    internal LogDomainSynchronizer() {}
+
+    internal LogRemoteReceiver getReceiver() {
+        return Log.RemoteReceiver;
+    }
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void InitializeFromDomain(LogDomainSynchronizer parent) {
+        Log.InitLoggingForChildDomain(parent.getReceiver());
+    }
+}
+
+/// <summary>
+/// The main class that handles logging in Melodia.
+/// </summary>
 public static class Log
 {
+    internal static Boolean initalized = false;
     internal static LogRemoteReceiver RemoteReceiver { get; private set; } = new LogRemoteReceiverNull();
     private static string LogPrefix = "?";
 
-    internal static string? LogFileLocation { get => RemoteReceiver.LogFileLocation; }
-    internal static bool ErrorLogged { get => RemoteReceiver.ErrorLogged; }
+    public static readonly LogDomainSynchronizer Synchronizer = new LogDomainSynchronizer();
 
+    public static string? LogFileLocation { get => RemoteReceiver.LogFileLocation; }
+    public static bool ErrorLogged { get => RemoteReceiver.ErrorLogged; }
+
+    /// <summary>
+    /// Initializes logging to a given path.
+    /// </summary>
     [MethodImpl(MethodImplOptions.Synchronized)]
-    internal static void InitLogging()
+    public static void InitLogging(string programName, string? baseDirectory = null)
     {
-        RemoteReceiver = new LogRemoteReceiverImpl(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Program.AssemblyNameString}.log"));
+        if (initalized) throw new Exception("Logging is already initialized.");
+        initalized = true;
+        RemoteReceiver = new LogRemoteReceiverImpl(Path.Combine(baseDirectory ?? AppDomain.CurrentDomain.BaseDirectory, $"{programName}.log"));
         LogPrefix = " ";
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     internal static void InitLoggingForChildDomain(LogRemoteReceiver remoteReceiver)
     {
+        if (initalized) throw new Exception("Logging is already initialized.");
+        initalized = true;
         RemoteReceiver = remoteReceiver;
         LogPrefix = "*";
     }
@@ -148,7 +174,7 @@ public static class Log
         BaseLog("Error", true, true, msg, e);
     }
 
-    internal static void MsgBox(string msg) {
-        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, Program.AssemblyNameString, msg, IntPtr.Zero);
+    public static void MsgBox(string msg) {
+        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "Melodia", msg, IntPtr.Zero);
     }
 }

@@ -66,8 +66,7 @@ internal static class Program {
     }
 
     [LoaderOptimization(LoaderOptimization.MultiDomain)]
-    internal static void Main(string[] args)
-    {
+    internal static void Main(string[] args) {
         try {
             MainBody(args);
         } catch (BootstrapException e) {

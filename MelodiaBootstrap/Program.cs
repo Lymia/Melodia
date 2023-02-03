@@ -3,7 +3,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security;
 using System.Threading;
 using SDL2;
@@ -20,8 +19,7 @@ internal static class Program {
     }
     
     private static Thread BootstrapProcess(string gameDirectory, string appDirectory, string appName, string[] args) {
-        var setup = new AppDomainSetup
-        {
+        var setup = new AppDomainSetup {
             ApplicationBase = appDirectory,
             ApplicationName = appName,
             DisallowCodeDownload = true,
@@ -43,7 +41,7 @@ internal static class Program {
 
     private static void MainBody(string[] args) {
         if (args.Length < 3) 
-            throw new BootstrapException("Please do not execute this application directly.");
+            throw new BootstrapException("Please do not execute this application directly. Run Melodia.exe instead.");
 
         var gameDirectory = args[0];
         var appDirectory = args[1];

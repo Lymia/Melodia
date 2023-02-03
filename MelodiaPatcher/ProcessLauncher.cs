@@ -10,24 +10,27 @@ using System.Security;
 using System.Threading;
 using System.Collections.Generic;
 using System.Reflection;
+using Melodia.Common.InternalApi;
 
 internal sealed class LoaderOptions {
     public readonly string GameDirectory;
     public readonly string BaseDirectory;
-    public readonly List<Plugin> Plugins = new List<Plugin>();
+    public readonly string TempDirectory;
+    public readonly List<IPlugin> Plugins = new List<IPlugin>();
 
     internal string[] PluginPath => new string[] { 
         Path.Combine(BaseDirectory, "lib/modules_guest"),
         GameDirectory,
     };
 
-    public LoaderOptions(string gameDirectory, string baseDirectory)
+    public LoaderOptions(string gameDirectory, string baseDirectory, string tempDirectory)
     {
         GameDirectory = gameDirectory;
         BaseDirectory = baseDirectory;
+        TempDirectory = tempDirectory;
     }
 
-    public LoaderOptions AddPlugin(Plugin plugin) {
+    public LoaderOptions AddPlugin(IPlugin plugin) {
         this.Plugins.Add(plugin);
         return this;
     }
@@ -45,10 +48,15 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
     private PatchedAssemblyResolver? resolver = null;
     private readonly Assembly myAssembly = Assembly.GetAssembly(typeof(TargetDomainCallback));
 
-    internal void Init(string gameDirectory, LogDomainSynchronizer logLocal) {
+    internal void Init(string gameDirectory, string baseDirectory, string tempDirectory, LogDomainSynchronizer logLocal, InternalCommonDataStore? store) {
         this.gameDirectory = gameDirectory;
         Log.Synchronizer.InitializeFromDomain(logLocal);
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+
+        InternalCommonInfo.GameDirectory = gameDirectory;
+        InternalCommonInfo.BaseDirectory = baseDirectory;
+        InternalCommonInfo.TempDirectory = tempDirectory;
+        InternalCommonInfo.DataStore = store;
     }
     internal void CommitPatcher(PatchedAssemblyResolver context) {
         this.resolver = context;
@@ -105,7 +113,11 @@ internal static class ProcessLauncher {
         var callbackObj = appDomain.CreateInstance(Program.AssemblyNameString, typeof(TargetDomainCallback).FullName);
         var callback = (TargetDomainCallback) callbackObj.Unwrap();
 
-        callback.Init(options.GameDirectory, Log.Synchronizer);
+        callback.Init(options.GameDirectory, options.BaseDirectory, options.TempDirectory, Log.Synchronizer, InternalCommonInfo.DataStore);
+
+        Log.Debug(" - Running plugin BeforePatch hook.");
+        foreach (var plugin in options.Plugins) plugin.BeforePatchEarly();
+        foreach (var plugin in options.Plugins) plugin.BeforePatch();
 
         Log.Debug(" - Patching assemblies.");
         var patchContext = new PatcherContext(options.PluginPath);
@@ -121,6 +133,10 @@ internal static class ProcessLauncher {
         }
 
         callback.CommitPatcher(patchContext.ToResolver());
+
+        Log.Debug(" - Running plugin AfterPatch hook.");
+        foreach (var plugin in options.Plugins) plugin.AfterPatchEarly();
+        foreach (var plugin in options.Plugins) plugin.AfterPatch();
 
         Log.Debug(" - Setting up environment.");
         Environment.CurrentDirectory = options.GameDirectory;

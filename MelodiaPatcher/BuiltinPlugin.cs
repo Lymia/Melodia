@@ -6,7 +6,7 @@ using Melodia.Common;
 namespace Melodia.Patcher;
 
 internal sealed class BuiltinPlugin : Plugin {
-    bool Plugin.InvalidatesAchievements => false;
+    public override bool InvalidatesAchievements => false;
 
     private const string RestartAppIfNecessary = 
         "System.Boolean Steamworks.SteamAPI::RestartAppIfNecessary(Steamworks.AppId_t)";
@@ -54,7 +54,7 @@ internal sealed class BuiltinPlugin : Plugin {
         }
     }
 
-    void Plugin.Patch(PatcherContext context) {
+    public override void Patch(PatcherContext context) {
         var assembly = context.LoadAssembly("Crystal Project");
 
         var patchAssembly = context.LoadAssembly("Melodia.CoreCallbacks");

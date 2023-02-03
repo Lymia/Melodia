@@ -50,6 +50,7 @@ fn launch_bin(game_dir: &Path, base_dir: &Path, temp_dir: &Path, bin: &Path) -> 
     // arguments for MelodiaPatcher
     args.push(game_dir.as_os_str().to_owned());
     args.push(base_dir.as_os_str().to_owned());
+    args.push(temp_dir.as_os_str().to_owned());
     // user arguments
     args.extend(std::env::args_os().skip(1));
 
@@ -93,7 +94,7 @@ fn launch_game(temp_dir: &Path, base_dir: &Path, game_dir: &Path) -> Result<()> 
     symlink(&bootstrap_dir, temp_dir, "MelodiaBootstrap.exe.config")?;
 
     // Write steam_appid.txt
-    fs::write(resolve(temp_dir, "steam_appid.txt"), "1637730")?;
+    fs::write(resolve(temp_dir, "steam_appid.txt"), crate::APP_ID.to_string())?;
 
     // Execute MelodiaBootstrap binary
     println!("[ Launching bootstrap binary... ]");

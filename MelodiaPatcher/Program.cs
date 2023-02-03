@@ -23,6 +23,7 @@ internal static class Program {
 
         Log.Trace($"Game Directory: {args[0]}");
         Log.Trace($"Base Directory: {args[1]}");
+        Log.Trace();
         
         var options = new LoaderOptions(args[0], args[1]);
         options.AddPlugin(new BuiltinPlugin());
@@ -32,7 +33,7 @@ internal static class Program {
     [LoaderOptimization(LoaderOptimization.MultiDomain)]
     internal static void Main(string[] args)
     {
-        Log.InitLogging(AssemblyNameString);
+        Log.InitLogging(AssemblyNameString, args.Length >= 2 ? args[1] : null);
         Log.Trace($"{AssemblyNameString} version {VersionString}");
         Log.Trace();
 

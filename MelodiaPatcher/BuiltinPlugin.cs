@@ -31,6 +31,9 @@ internal sealed class BuiltinPlugin : Plugin {
     
     private static void sillysillyfairy(AssemblyDef assembly)
     {
+        // this is temporary, in case you're wondering -w-
+        // it's just here so it's obvious when it works
+
         var imp = new Importer(assembly.ManifestModule);
         var type = assembly.ManifestModule.Find("Sang.Window.Title.WindowTitleFooter", false);
         

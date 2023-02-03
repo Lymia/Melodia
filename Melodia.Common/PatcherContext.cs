@@ -1,16 +1,22 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using dnlib.DotNet;
 using dnlib.DotNet.Writer;
 
 namespace Melodia.Common;
 
-/// <summary>
-/// A class that helps manage assemblies that may be patched by a program.
-/// </summary>
-public sealed class PatcherContext : PersistantRemoteObject {
+[Serializable]
+internal sealed class AssemblyResolver {
+    private readonly string[] searchPath;
+
+    public AssemblyResolver(string[] searchPath) {
+        this.searchPath = searchPath;
+    }
+
     private static string? findDllOrExe(string directory, string name) {
         string exePath = Path.Combine(directory, $"{name}.exe");
         if (File.Exists(exePath)) return exePath;
@@ -21,6 +27,19 @@ public sealed class PatcherContext : PersistantRemoteObject {
         return null;
     }
 
+    public string? FindAssemblyPath(string name) {
+        foreach (var path in searchPath) {
+            string? candidate = findDllOrExe(path, name);
+            if (candidate != null) return candidate;
+        }
+        return null;
+    }
+}
+
+/// <summary>
+/// A class that helps manage assemblies that may be patched by a program.
+/// </summary>
+public sealed class PatcherContext {
     private static AssemblyDef loadAssembly(string name, string path) {
         var assembly = AssemblyDef.Load(path);
         Trace.Assert(assembly.Name == name, $"{name} does not contain the correct assembly!");
@@ -29,29 +48,18 @@ public sealed class PatcherContext : PersistantRemoteObject {
 
     private readonly Dictionary<string, AssemblyDef> assemblies = new Dictionary<string, AssemblyDef>();
     private readonly HashSet<string> modifiedAssemblies = new HashSet<string>();
-    private bool committed = false;
 
-    private readonly string[] searchPath;
+    private readonly AssemblyResolver resolver;
 
     public PatcherContext(string[] searchPath) {
-        this.searchPath = searchPath;
-    }
-
-    public string? FindAssemblyPath(string name) {
-        foreach (var path in searchPath) {
-            string? candidate = findDllOrExe(path, name);
-            if (candidate != null) return candidate;
-        }
-        return null;
+        resolver = new AssemblyResolver(searchPath);
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     public AssemblyDef LoadAssembly(string name) {
-        Trace.Assert(!committed, "PatcherContext is already committed!");
-
         if (assemblies.ContainsKey(name)) return assemblies[name];
 
-        string? path = FindAssemblyPath(name);
+        string? path = resolver.FindAssemblyPath(name);
         if (path == null) throw new System.Exception($"'{name}' cannot be found in the search path!");
         var assembly = loadAssembly(name, path);
         assemblies[name] = assembly;
@@ -60,14 +68,12 @@ public sealed class PatcherContext : PersistantRemoteObject {
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     public void MarkAssemblyModified(string name) {
-        Trace.Assert(!committed, "PatcherContext is already committed!");
-
         modifiedAssemblies.Add(name);
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
-    public Dictionary<string, byte[]> CommitModified() {
-        var result = new Dictionary<string, byte[]>();
+    public PatchedAssemblyResolver ToResolver() {
+        var overrides = new Dictionary<string, byte[]>();
         foreach (var modified in modifiedAssemblies) {
             if (!assemblies.ContainsKey(modified)) continue;
 
@@ -76,13 +82,27 @@ public sealed class PatcherContext : PersistantRemoteObject {
             var patchedData = new MemoryStream();
             assembly.Write(patchedData, settings);
             
-            result[assembly.Name] = patchedData.ToArray();
+            overrides[assembly.Name] = patchedData.ToArray();
         }
-        
-        assemblies.Clear();
-        modifiedAssemblies.Clear();
-        committed = true;
+        return new PatchedAssemblyResolver(resolver, overrides);
+    }
+}
 
-        return result;
+[Serializable]
+public sealed class PatchedAssemblyResolver {
+    private readonly AssemblyResolver resolver;
+    private readonly Dictionary<string, byte[]> overrides;
+
+    internal PatchedAssemblyResolver(AssemblyResolver resolver, Dictionary<string, byte[]> overrides)
+    {
+        this.resolver = resolver;
+        this.overrides = overrides;
+    }
+
+    public Assembly? ResolveAssembly(string name) {
+        if (overrides.ContainsKey(name)) return Assembly.Load(overrides[name]);
+        var resolvedPath = resolver.FindAssemblyPath(name);
+        if (resolvedPath != null) return Assembly.LoadFile(resolvedPath);
+        return null;
     }
 }

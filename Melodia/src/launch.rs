@@ -96,7 +96,7 @@ fn launch_game(temp_dir: &Path, base_dir: &Path, game_dir: &Path) -> Result<()> 
     fs::write(resolve(temp_dir, "steam_appid.txt"), "1637730")?;
 
     // Execute MelodiaBootstrap binary
-    println!("Launching bootstrap binary...");
+    println!("[ Launching bootstrap binary... ]");
     launch_bin(
         game_dir,
         base_dir,

@@ -42,8 +42,7 @@ internal sealed class LoaderOptions {
 
 internal sealed class TargetDomainCallback : PersistantRemoteObject {
     private string? gameDirectory;
-    private PatcherContext patcherContext = new PatcherContext(new string[0]);
-    private Dictionary<string, byte[]> patchedAssemblies = new Dictionary<string, byte[]>();
+    private PatchedAssemblyResolver? resolver = null;
     private readonly Assembly myAssembly = Assembly.GetAssembly(typeof(TargetDomainCallback));
 
     internal void Init(string gameDirectory, LogDomainSynchronizer logLocal) {
@@ -51,9 +50,8 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
         Log.Synchronizer.InitializeFromDomain(logLocal);
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
     }
-    internal void CommitPatcher(PatcherContext context) {
-        this.patchedAssemblies = context.CommitModified();
-        this.patcherContext = context;
+    internal void CommitPatcher(PatchedAssemblyResolver context) {
+        this.resolver = context;
     }
 
     private Assembly? ResolveAssembly(Object sender, ResolveEventArgs ev) {
@@ -65,16 +63,7 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
         }
 
         string name = ev.Name.Split(',')[0].Trim();
-
-        if (patchedAssemblies.ContainsKey(name)) {
-            Log.Debug(" - Using patched assembly");
-            return Assembly.Load(patchedAssemblies[name]);
-        }
-
-        var path = patcherContext.FindAssemblyPath(name);
-        if (path != null) return Assembly.LoadFrom(path);
-
-        return null;
+        return resolver == null ? null : resolver.ResolveAssembly(name);
     }
 }
 
@@ -96,7 +85,7 @@ internal static class ProcessLauncher {
 
     public static Thread StartProcess(LoaderOptions options, string[] args)
     {
-        Log.Info("Preparing to start Crystal Project");
+        Log.Info("[ Preparing to start Crystal Project ]");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
@@ -118,10 +107,10 @@ internal static class ProcessLauncher {
 
         callback.Init(options.GameDirectory, Log.Synchronizer);
 
-        Log.Debug(" - Patching executables.");
+        Log.Debug(" - Patching assemblies.");
         var patchContext = new PatcherContext(options.PluginPath);
         foreach (var plugin in options.Plugins) {
-            Log.Debug($"   - Running plugin {plugin.GetType().FullName}.");
+            Log.Debug($"   - Running plugin {plugin.GetType().FullName}");
             plugin.Patch(patchContext);
         }
 
@@ -131,7 +120,7 @@ internal static class ProcessLauncher {
             patchContext.MarkAssemblyModified("Crystal Project");
         }
 
-        callback.CommitPatcher(patchContext);
+        callback.CommitPatcher(patchContext.ToResolver());
 
         Log.Debug(" - Setting up environment.");
         Environment.CurrentDirectory = options.GameDirectory;
@@ -140,7 +129,7 @@ internal static class ProcessLauncher {
         Log.Debug($"Finished in {stopwatch.ElapsedMilliseconds} ms");
         Log.Debug();
 
-        Log.Info("Launching Crystal Project");
+        Log.Info("[ Launching Crystal Project ]");
         var thread = new Thread(() => {
             appDomain.ExecuteAssemblyByName("Crystal Project", args);
             Log.Debug("Crystal Project terminated.");

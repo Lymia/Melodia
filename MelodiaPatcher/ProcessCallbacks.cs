@@ -10,8 +10,8 @@ using Steamworks;
 internal sealed class TargetDomainCallback : PersistantRemoteObject {
     private string? gameDirectory;
     private readonly Dictionary<string, byte[]> patchedAssemblies = new Dictionary<string, byte[]>();
-
     private readonly Assembly myAssembly = Assembly.GetAssembly(typeof(TargetDomainCallback));
+
     internal void Init(string gameDirectory, LogRemoteReceiver logRemote) {
         this.gameDirectory = gameDirectory;
         Log.InitLoggingForChildDomain(logRemote);
@@ -58,9 +58,22 @@ public static class Callbacks {
     public static void OnException(Exception e) {
         Log.Error($"{Program.AssemblyNameString} encountered unexpected error.", e);
     }
+
+    private static readonly string APPID_FILE = "steam_appid.txt";
+
     public static bool RestartAppIfNecessary(AppId_t unOwnAppID) {
         Log.Trace("Intercepting RestartAppIfNecessary.");
-        File.WriteAllText("steam_appid.txt", $"{(uint) unOwnAppID}");
+
+        // Since we're relying on Init directly with no Steam restart, check that the appid file is correct.
+        var appIdText = $"{(uint) unOwnAppID}";
+        if (File.Exists(APPID_FILE) && File.ReadAllText(APPID_FILE).Trim() != appIdText) {
+            Log.MsgBox($"{APPID_FILE} does not match expected appid! Terminating process.");
+            System.Environment.Exit(1);
+        } else if (!File.Exists(APPID_FILE)) {
+            Log.MsgBox($"{APPID_FILE} not found. Did you accidentally run MelodiaPatcher.exe directly?");
+            System.Environment.Exit(1);
+        }
+
         return false;
     }
 }

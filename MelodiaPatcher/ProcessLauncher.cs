@@ -43,7 +43,7 @@ internal static class ProcessLauncher {
         callback.AddOverride(assemblyName ?? assembly.Name, patchedData.ToArray());
     }
 
-    private static readonly string RestartAppIfNecessary = 
+    private const string RestartAppIfNecessary = 
         "System.Boolean Steamworks.SteamAPI::RestartAppIfNecessary(Steamworks.AppId_t)";
     private static void DisableSteamRelaunch(AssemblyDef assembly)
     {
@@ -113,7 +113,7 @@ internal static class ProcessLauncher {
 
         sillysillyfairy(assembly);
 
-        AddOverride(callback, assembly, "Crystal Project Patched");
+        AddOverride(callback, assembly, "Crystal Project");
     }
 
     public static Thread StartProcess(LoaderOptions options, string[] args)
@@ -130,8 +130,6 @@ internal static class ProcessLauncher {
             DisallowCodeDownload = true,
             DisallowPublisherPolicy = true
         };
-        setup.PrivateBinPath = setup.ApplicationBase;
-        setup.PrivateBinPathProbe = "true";
         var appDomain = AppDomain.CreateDomain("Crystal Project", null, setup, FULL_TRUST);
 
         Log.Debug(" - Creating remote callback.");
@@ -152,7 +150,7 @@ internal static class ProcessLauncher {
 
         Log.Info("Launching Crystal Project");
         var thread = new Thread(() => {
-            appDomain.ExecuteAssemblyByName("Crystal Project Patched", args);
+            appDomain.ExecuteAssemblyByName("Crystal Project", args);
             Log.Debug("Crystal Project terminated.");
         });
         thread.SetApartmentState(ApartmentState.MTA);

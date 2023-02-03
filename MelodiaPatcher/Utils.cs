@@ -31,7 +31,6 @@ internal static partial class Utils
 internal interface LogRemoteReceiver {
     string? LogFileLocation { get; }
     bool ErrorLogged { get; set; }
-    bool VerboseMode { get; set; }
     public void WriteLogFile(string taggedMsg);
 }
 
@@ -40,7 +39,6 @@ internal class LogRemoteReceiverImpl : PersistantRemoteObject, LogRemoteReceiver
     private StreamWriter? outStream;
     public string? LogFileLocation { get { return LogFileLocationInternal; } }
     public bool ErrorLogged { get; set; } = false;
-    public bool VerboseMode { get; set; } = false;
 
     string? LogFileLocationInternal;
 
@@ -73,7 +71,6 @@ internal class LogRemoteReceiverImpl : PersistantRemoteObject, LogRemoteReceiver
 internal class LogRemoteReceiverNull : LogRemoteReceiver {
     public string? LogFileLocation { get; } = null;
     public bool ErrorLogged { get; set; } = false;
-    public bool VerboseMode { get; set; } = false;
     public void WriteLogFile(string taggedMsg) {}
 }
 
@@ -91,8 +88,6 @@ public static class Log
 
     internal static string? LogFileLocation { get => RemoteReceiver.LogFileLocation; }
     internal static bool ErrorLogged { get => RemoteReceiver.ErrorLogged; }
-    internal static bool VerboseMode { get => RemoteReceiver.VerboseMode;
-                                        set => RemoteReceiver.VerboseMode = value; }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     internal static void InitLogging()
@@ -108,7 +103,7 @@ public static class Log
         LogPrefix = "*";
     }
     
-    private static string ExceptionMessage(Exception? e, string? message, bool verbose)
+    private static string ExceptionMessage(Exception? e, string? message)
     {
         message = message ?? "";
         if (e == null) return message;
@@ -123,8 +118,6 @@ public static class Log
             if (hasLastLine) sb.Append("\nCaused by: ");
 
             var excString = current.ToString().Trim();
-            if (!verbose && current.Message != null && current.Message != "")
-                excString = excString.Split(new char[] { ':' }, 2)[1].Trim();
             sb.Append(excString);
 
             current = current.InnerException;
@@ -134,17 +127,17 @@ public static class Log
     private static void BaseLog(string tag, bool alwaysTag, bool printConsole, string? message, Exception? e)
     {
         if (printConsole)
-            Console.WriteLine(ExceptionMessage(e, $"{(alwaysTag ? $"{tag}: " : "")}{message}", VerboseMode));
-        RemoteReceiver.WriteLogFile(ExceptionMessage(e, $"{LogPrefix}{tag.PadRight(5)}: {message}", true));
+            Console.WriteLine(ExceptionMessage(e, $"{(alwaysTag ? $"{tag}: " : "")}{message}"));
+        RemoteReceiver.WriteLogFile(ExceptionMessage(e, $"{LogPrefix}{tag.PadRight(5)}: {message}"));
     }
 
     internal static string FallbackFormatError(string? msg = null, Exception? e = null) =>
-        ExceptionMessage(e, $"Error: {msg}", true);
+        ExceptionMessage(e, $"Error: {msg}");
 
     public static void Trace(string? msg = null, Exception? e = null) =>
         BaseLog("Trace", false, false, msg, e);
     public static void Debug(string? msg = null, Exception? e = null) =>
-        BaseLog("Debug", false, VerboseMode, msg, e);
+        BaseLog("Debug", false, false, msg, e);
     public static void Info(string? msg = null, Exception? e = null) =>
         BaseLog("Info", false, true, msg, e);
     public static void Warn(string? msg = null, Exception? e = null) =>

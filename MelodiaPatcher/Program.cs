@@ -13,16 +13,16 @@ internal static class Program {
         var assembly = typeof(Program).Assembly;
         var ver = new Version(assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true).OfType<AssemblyFileVersionAttribute>().First().Version);
         VersionString = $"{ver.Major}.{ver.Minor}.{ver.Build}";
-        AssemblyNameString = assembly.FullName;
+        AssemblyNameString = assembly.GetName().Name;
     }    
 
     private static void MainBody(string[] args) {
-        if (args.Length != 1) 
+        if (args.Length < 1) 
             throw new Exception($"Not enough arguments passed to {AssemblyNameString}!");
 
-        Log.Trace($"Target .dll to load: {args[0]}");
+        Log.Trace($"Game Directory: {args[0]}");
         
-        ProcessLauncher.StartProcess(new LoaderOptions(AppDomain.CurrentDomain.BaseDirectory), new string[0]);
+        ProcessLauncher.StartProcess(new LoaderOptions(args[0]), new string[0]);
     }
 
     [LoaderOptimization(LoaderOptimization.MultiDomain)]

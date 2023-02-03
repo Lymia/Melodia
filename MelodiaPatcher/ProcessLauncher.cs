@@ -125,11 +125,13 @@ internal static class ProcessLauncher {
         Log.Debug(" - Creating application domain.");
         var setup = new AppDomainSetup
         {
-            ApplicationBase = AppDomain.CurrentDomain.BaseDirectory,
+            ApplicationBase = options.GameDirectory,
             ApplicationName = "Crystal Project",
             DisallowCodeDownload = true,
             DisallowPublisherPolicy = true
         };
+        setup.PrivateBinPath = AppDomain.CurrentDomain.BaseDirectory;
+        setup.PrivateBinPathProbe = "true";
         var appDomain = AppDomain.CreateDomain("Crystal Project", null, setup, FULL_TRUST);
 
         Log.Debug(" - Creating remote callback.");

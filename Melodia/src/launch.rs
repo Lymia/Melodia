@@ -1,8 +1,5 @@
 use anyhow::{bail, Result};
-use std::{
-    path::{Path, PathBuf},
-    process::Command,
-};
+use std::{fs, path::{Path, PathBuf}, process::Command};
 use std::ffi::OsString;
 use tempfile::TempDir;
 
@@ -49,6 +46,7 @@ fn launch_bin(game_dir: &Path, base_dir: &Path, temp_dir: &Path, bin: &Path) -> 
     args.push(game_dir.as_os_str().to_owned());
     args.push(patcher_dir.as_os_str().to_owned());
     args.push(OsString::from("MelodiaPatcher"));
+    args.push(game_dir.as_os_str().to_owned());
     args.extend(std::env::args_os().skip(1));
 
     let mut child = Command::new(bin).current_dir(temp_dir).args(args).spawn()?;
@@ -59,14 +57,15 @@ fn launch_bin(game_dir: &Path, base_dir: &Path, temp_dir: &Path, bin: &Path) -> 
 #[cfg(target_os = "linux")]
 fn launch_game(temp_dir: &Path, base_dir: &Path, game_dir: &Path) -> Result<()> {
     // Symlink Mono files
-    std::fs::copy(
+    fs::copy(
         resolve_chk(game_dir, "Crystal Project.bin.x86_64")?,
         resolve(temp_dir, "MelodiaBootstrap.bin.x86_64"),
     )?;
     symlink_dir(game_dir, temp_dir, "lib64")?;
     symlink(game_dir, temp_dir, "monoconfig")?;
     symlink(game_dir, temp_dir, "monomachineconfig")?;
-    for file in std::fs::read_dir(game_dir)? {
+    symlink(game_dir, temp_dir, "Steamworks.NET.dll")?; // TODO: Figure out how to avoid this!!
+    for file in fs::read_dir(game_dir)? {
         let file = file?;
         if let Some(name) = file.file_name().to_str() {
             if name.ends_with(".dll")
@@ -85,6 +84,9 @@ fn launch_game(temp_dir: &Path, base_dir: &Path, game_dir: &Path) -> Result<()> 
     symlink(&bootstrap_dir, temp_dir, "MelodiaBootstrap.exe")?;
     symlink(&bootstrap_dir, temp_dir, "MelodiaBootstrap.pdb")?;
     symlink(&bootstrap_dir, temp_dir, "MelodiaBootstrap.exe.config")?;
+
+    // Write steam_appid.txt
+    fs::write(resolve(temp_dir, "steam_appid.txt"), "1637730")?;
 
     // Execute MelodiaBootstrap binary
     println!("Launching bootstrap binary...");

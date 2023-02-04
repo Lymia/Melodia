@@ -105,4 +105,8 @@ public sealed class PatchedAssemblyResolver {
         if (resolvedPath != null) return Assembly.LoadFile(resolvedPath);
         return null;
     }
+
+    public byte[] GetOverrideData(string name) {
+        return overrides[name];
+    }
 }

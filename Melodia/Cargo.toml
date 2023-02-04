@@ -7,6 +7,9 @@ edition = "2021"
 opt-level = "s"
 lto = true
 
+[features]
+setup_tool = []
+
 [dependencies]
 anyhow = "1.0.68"
 dirs = "4.0.0"

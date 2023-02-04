@@ -8,7 +8,7 @@ mkdir -v bin/lib/patcher || exit 1
 mkdir -v bin/lib/modules_host || exit 1
 mkdir -v bin/lib/modules_guest || exit 1
 
-echo "Restoring projects..."
+echo "[ Restoring projects... ]"
 dotnet restore || exit 1
 
 echo "[ Building Melodia.exe (main binary) ]"

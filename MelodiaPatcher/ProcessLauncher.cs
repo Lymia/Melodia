@@ -121,6 +121,13 @@ internal static class ProcessLauncher {
 
         Log.Debug(" - Patching assemblies.");
         var patchContext = new PatcherContext(options.PluginPath);
+
+        // Run the hardcoded passes
+        var crystalProjectAssembly = patchContext.LoadAssembly("Crystal Project");
+        FixedPasses.OpenInternalClasses(crystalProjectAssembly);
+        patchContext.MarkAssemblyModified("Crystal Project");
+
+        // Run the actual plugin passes
         foreach (var plugin in options.Plugins) {
             Log.Debug($"   - Running plugin {plugin.GetType().FullName}");
             plugin.Patch(patchContext);

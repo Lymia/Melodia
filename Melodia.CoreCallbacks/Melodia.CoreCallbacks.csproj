@@ -11,7 +11,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="TOOLS">
-      <HintPath>../contrib/CrystalProjectLinux/Steamworks.NET.dll</HintPath>
+      <HintPath>../contrib/Steamworks.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="TOOLS">
+      <HintPath>../contrib/Crystal Project.exe</HintPath>
     </Reference>
     <ProjectReference Include="../Melodia.Common/Melodia.Common.csproj" /> 
   </ItemGroup>

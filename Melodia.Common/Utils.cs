@@ -1,6 +1,5 @@
 namespace Melodia.Common;
 
-using SDL2;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -172,9 +171,5 @@ public static class Log
     {
         RemoteReceiver.ErrorLogged = true;
         BaseLog("Error", true, true, msg, e);
-    }
-
-    public static void MsgBox(string msg) {
-        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "Melodia", msg, IntPtr.Zero);
     }
 }

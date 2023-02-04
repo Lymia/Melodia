@@ -5,13 +5,12 @@
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
-    <Product>MelodiaBootstrap</Product>
-    <AssemblyTitle>MelodiaBootstrap</AssemblyTitle>
+    <Product>MelodiaPatcher</Product>
+    <AssemblyTitle>CrystalPaMelodiaPatchertcher</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="TOOLS">
-      <HintPath>../contrib/FNA.dll</HintPath>
-    </Reference>
+    <PackageReference Include="dnlib" Version="3.6.0" />
+    <ProjectReference Include="../Melodia.Common/Melodia.Common.csproj" /> 
   </ItemGroup>
 </Project>

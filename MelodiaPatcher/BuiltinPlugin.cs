@@ -1,4 +1,4 @@
-using System;
+using System.Linq;
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
 using Melodia.Common;
@@ -6,6 +6,12 @@ using Melodia.Common;
 namespace Melodia.Patcher;
 
 internal sealed class BuiltinPlugin : Plugin {
+    public override string DisplayName => "Melodia Framework";
+
+    public override string DisplayVersion => Program.VersionString;
+
+    public override string DisplayAuthor => "AuroraAmissa 2023";
+    
     public override bool InvalidatesAchievements => false;
 
     private const string RestartAppIfNecessary = 
@@ -13,8 +19,7 @@ internal sealed class BuiltinPlugin : Plugin {
     private static void DisableSteamRelaunch(AssemblyDef assembly, TypeDef callbacks)
     {
         var imp = new Importer(assembly.ManifestModule);
-        var type = assembly.ManifestModule.Find("Sang.Utility.SteamManager", false);
-        
+        var type = assembly.Find("Sang.Utility.SteamManager", false);
         var method = type.FindMethod("Initialize");
 
         for (int i = 0; i < method.Body.Instructions.Count; i++)
@@ -22,36 +27,24 @@ internal sealed class BuiltinPlugin : Plugin {
             if (method.Body.Instructions[i].OpCode != OpCodes.Call) continue;
             var target = (IMethod)method.Body.Instructions[i].Operand;
             if (target.FullName != RestartAppIfNecessary) continue;
-
             method.Body.Instructions[i].Operand = imp.Import(callbacks.FindMethod("Hook_RestartAppIfNecessary"));
 
             break;
         }
     }
     
-    private static void sillysillyfairy(AssemblyDef assembly)
+    private static void HookTitleVersion(AssemblyDef assembly, TypeDef callbacks)
     {
-        // this is temporary, in case you're wondering -w-
-        // it's just here so it's obvious when it works
-
         var imp = new Importer(assembly.ManifestModule);
-        var type = assembly.ManifestModule.Find("Sang.Window.Title.WindowTitleFooter", false);
-        
+        var type = assembly.Find("Sang.Window.Title.WindowTitleFooter", false);
         var method = type.FindMethod("Draw");
 
-        for (int i = 0; i < method.Body.Instructions.Count; i++)
-        {
-            if (method.Body.Instructions[i].OpCode != OpCodes.Ldstr) continue;
-            var target = (string)method.Body.Instructions[i].Operand;
-            Console.WriteLine(target);
-            Console.WriteLine("Andrew Willman 2017-2022");
-            Console.WriteLine(target == "Andrew Willman 2017-2022");
-            if (target != "Andrew Willman 2017-2022") continue;
-
-            method.Body.Instructions[i].Operand = (String) "Lymia was here :D XD :3";
-
-            break;
-        }
+        method.Body.Instructions.RemoveAfter(2);
+        method.Body.Instructions.AddRange(new Instruction[] {
+            OpCodes.Ldarg_0.ToInstruction(),
+            OpCodes.Call.ToInstruction(imp.Import(callbacks.FindMethod("Hook_WindowTitleFooter_Draw"))),
+            OpCodes.Ret.ToInstruction(),
+        });
     }
 
     public override void Patch(PatcherContext context) {
@@ -62,7 +55,9 @@ internal sealed class BuiltinPlugin : Plugin {
 
         Log.Debug("     - Disabling Steam Relaunch...");
         DisableSteamRelaunch(assembly, callbacks);
-        sillysillyfairy(assembly);
+
+        Log.Debug("     - Hooking title version rendering...");
+        HookTitleVersion(assembly, callbacks);
 
         context.MarkAssemblyModified("Crystal Project");
     }

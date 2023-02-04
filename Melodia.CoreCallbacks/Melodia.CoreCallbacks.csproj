@@ -11,10 +11,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="TOOLS">
-      <HintPath>../contrib/Steamworks.NET.dll</HintPath>
+      <HintPath>../contrib/Crystal Project.exe</HintPath>
     </Reference>
     <Reference Include="TOOLS">
-      <HintPath>../contrib/Crystal Project.exe</HintPath>
+      <HintPath>../contrib/FNA.dll</HintPath>
+    </Reference>
+    <Reference Include="TOOLS">
+      <HintPath>../contrib/Steamworks.NET.dll</HintPath>
     </Reference>
     <ProjectReference Include="../Melodia.Common/Melodia.Common.csproj" /> 
   </ItemGroup>

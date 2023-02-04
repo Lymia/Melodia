@@ -1,6 +1,12 @@
 namespace Melodia.Common;
 
 public interface IPlugin {
+    public string DisplayName { get; }
+
+    public string DisplayVersion { get; }
+
+    public string DisplayAuthor { get; }
+
     public bool InvalidatesAchievements { get; }
 
     public void AfterPatch();
@@ -22,8 +28,13 @@ public interface IPlugin {
 /// <summary>
 /// The main entry point for patcher plugins.
 /// </summary>
-public abstract class Plugin : IPlugin
-{
+public abstract class Plugin : IPlugin {
+    public abstract string DisplayName { get; }
+
+    public abstract string DisplayVersion { get; }
+
+    public abstract string DisplayAuthor { get; }
+
     public virtual bool InvalidatesAchievements => true;
 
     public virtual void AfterPatch() {}

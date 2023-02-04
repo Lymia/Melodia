@@ -4,21 +4,20 @@ using Melodia.Common;
 using Melodia.Common.InternalApi;
 using SDL2;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
 internal static class Program {
-    internal static readonly string VersionString;
     internal static readonly string AssemblyNameString;
     static Program()
     {
         var assembly = typeof(Program).Assembly;
-        var ver = new Version(assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true).OfType<AssemblyFileVersionAttribute>().First().Version);
-        VersionString = $"{ver.Major}.{ver.Minor}.{ver.Build}";
         AssemblyNameString = assembly.GetName().Name;
     }
+    internal const string VersionString = "0.1.0";
 
     internal static void MsgBox(string msg) {
         SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "Melodia", msg, IntPtr.Zero);
@@ -57,6 +56,14 @@ internal static class Program {
         Log.Debug(" - Initializing plugins.");
         foreach (var plugin in options.Plugins) plugin.InitEarly();
         foreach (var plugin in options.Plugins) plugin.Init();
+
+        Log.Debug(" - Setting plugin list.");
+        {
+            var pluginList = new List<PluginInfo>();
+            foreach (var plugin in options.Plugins) 
+                pluginList.Add(new PluginInfo(plugin.DisplayName, plugin.DisplayVersion, plugin.DisplayAuthor));
+            InternalCommonInfo.DataStore.PluginList = pluginList.ToArray();
+        }
 
         ProcessLauncher.StartProcess(options, args.Skip(3).ToArray());
     }

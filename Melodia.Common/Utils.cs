@@ -1,6 +1,7 @@
 namespace Melodia.Common;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Permissions;
@@ -171,5 +172,40 @@ public static class Log
     {
         RemoteReceiver.ErrorLogged = true;
         BaseLog("Error", true, true, msg, e);
+    }
+}
+
+public static class IListExtension {
+    public static void AddRange<T>(this IList<T> list, IEnumerable<T> items) {
+        if (list == null) throw new ArgumentNullException(nameof(list));
+        if (items == null) throw new ArgumentNullException(nameof(items));
+
+        if (list is List<T> asList) {
+            asList.AddRange(items);
+        } else {
+            foreach (var item in items) list.Add(item);
+        }
+    }
+
+    public static void InsertRange<T>(this IList<T> list, int idx, IEnumerable<T> items) {
+        if (list == null) throw new ArgumentNullException(nameof(list));
+        if (items == null) throw new ArgumentNullException(nameof(items));
+
+        if (list is List<T> asList) {
+            asList.InsertRange(idx, items);
+        } else {
+            foreach (var item in items) {
+                list.Insert(idx, item);
+                idx += 1;
+            }
+        }
+    }
+
+    public static void RemoveAfter<T>(this IList<T> list, int idx) {
+        var count = list.Count;
+        while (count > idx) {
+            count -= 1;
+            list.RemoveAt(count);
+        }
     }
 }

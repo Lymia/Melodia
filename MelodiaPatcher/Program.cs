@@ -24,7 +24,6 @@ internal static class Program {
         SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "Melodia", msg, IntPtr.Zero);
     }
 
-
     private static void MainBody(string[] args) {
         Log.Trace($"Game Directory: {args[0]}");
         Log.Trace($"Base Directory: {args[1]}");

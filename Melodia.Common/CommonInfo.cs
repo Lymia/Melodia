@@ -23,4 +23,3 @@ namespace Melodia.Common {
             (InternalApi.InternalCommonInfo.DataStore ?? throw new Exception("No CommonDict available?")).Dict;
     }
 }
-

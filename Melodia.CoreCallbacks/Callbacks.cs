@@ -15,9 +15,7 @@ public static class Callbacks {
     }
 
     // TODO: Figure out why the signature here can't just be WindowTitleFooter self
-    public static void Hook_WindowTitleFooter_Draw(object self0) {
-        var self = (WindowTitleFooter) self0;
-
+    public static void Hook_WindowTitleFooter_Draw(WindowTitleFooter self) {
         Graphics.SpriteBatchBegin();
 
         var additionalOffset = 0;

@@ -10,7 +10,7 @@ using dnlib.DotNet.Writer;
 namespace Melodia.Common;
 
 [Serializable]
-internal sealed class AssemblyResolver {
+internal struct AssemblyResolver {
     private readonly string[] searchPath;
 
     public AssemblyResolver(string[] searchPath) {
@@ -71,6 +71,14 @@ public sealed class PatcherContext {
         modifiedAssemblies.Add(name);
     }
 
+    internal Dictionary<MethodDef, List<PatcherAction>> patchActions = 
+        new Dictionary<MethodDef, List<PatcherAction>>(new IdentityEqualityComparer<MethodDef>());
+    internal void addPatchAction(MethodDef def, PatcherAction action) {
+        if (!patchActions.ContainsKey(def))
+            patchActions.Add(def, new List<PatcherAction>());
+        patchActions[def].Add(action);
+    }
+
     [MethodImpl(MethodImplOptions.Synchronized)]
     public PatchedAssemblyResolver ToResolver() {
         var overrides = new Dictionary<string, byte[]>();
@@ -78,6 +86,7 @@ public sealed class PatcherContext {
             if (!assemblies.ContainsKey(modified)) continue;
 
             var assembly = assemblies[modified];
+            this.commitPatches(assembly);
             var settings = new ModuleWriterOptions(assembly.ManifestModule);
             var patchedData = new MemoryStream();
             assembly.Write(patchedData, settings);
@@ -89,7 +98,7 @@ public sealed class PatcherContext {
 }
 
 [Serializable]
-public sealed class PatchedAssemblyResolver {
+public struct PatchedAssemblyResolver {
     private readonly AssemblyResolver resolver;
     private readonly Dictionary<string, byte[]> overrides;
 

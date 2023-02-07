@@ -18,20 +18,7 @@ namespace Melodia.Common {
     }
 
     [Serializable]
-    public sealed class PluginInfo {
-        public readonly string Name;
-
-        public readonly string Version;
-
-        public readonly string Author;
-
-        public PluginInfo(string name, string version, string author)
-        {
-            Name = name;
-            Version = version;
-            Author = author;
-        }
-    }
+    public readonly record struct PluginInfo(string Name, string Version, string Author);
 
     public static class CommonInfo {
         public static string BaseDirectory => InternalApi.InternalCommonInfo.BaseDirectory;

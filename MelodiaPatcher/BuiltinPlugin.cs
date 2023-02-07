@@ -34,28 +34,15 @@ internal sealed class BuiltinPlugin : Plugin {
         }
     }
     
-    private static void HookTitleVersion(AssemblyDef assembly, AssemblyDef patch)
-    {
-        var type = assembly.Find("Sang.Window.Title.WindowTitleFooter", false);
-        var method = type.FindMethod("Draw");
-
-        method.Body.Instructions.RemoveAfter(2);
-        method.Body.Instructions.AddRange(new Instruction[] {
-            OpCodes.Ldarg_0.ToInstruction(),
-            OpCodes.Call.ToInstruction(assembly.ImportHook(patch, Callbacks, "Hook_WindowTitleFooter_Draw")),
-            OpCodes.Ret.ToInstruction(),
-        });
-    }
-
     public override void Patch(PatcherContext context) {
+        context.ApplyPatches("Crystal Project", "Melodia.CoreCallbacks");
+
+        // additional manual patches - TODO: Make this no longer manual
         var assembly = context.LoadAssembly("Crystal Project");
         var patch = context.LoadAssembly("Melodia.CoreCallbacks");
 
         Log.Debug("     - Disabling Steam Relaunch...");
         DisableSteamRelaunch(assembly, patch);
-
-        Log.Debug("     - Hooking title version rendering...");
-        HookTitleVersion(assembly, patch);
 
         context.MarkAssemblyModified("Crystal Project");
         context.MarkAssemblyModified("Melodia.CoreCallbacks");

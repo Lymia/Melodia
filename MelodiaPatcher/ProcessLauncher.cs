@@ -12,13 +12,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using Melodia.Common.InternalApi;
 
-internal sealed class LoaderOptions {
+internal struct LoaderOptions {
     public readonly string GameDirectory;
     public readonly string BaseDirectory;
     public readonly string TempDirectory;
     public readonly List<IPlugin> Plugins = new List<IPlugin>();
 
-    internal string[] PluginPath => new string[] { 
+    internal string[] PluginPath => new string[] {
+        AppDomain.CurrentDomain.BaseDirectory,
         Path.Combine(BaseDirectory, "lib/modules_guest"),
         GameDirectory,
     };
@@ -71,7 +72,7 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
         }
 
         string name = ev.Name.Split(',')[0].Trim();
-        return resolver == null ? null : resolver.ResolveAssembly(name);
+        return resolver == null ? null : resolver.Value.ResolveAssembly(name);
     }
 }
 

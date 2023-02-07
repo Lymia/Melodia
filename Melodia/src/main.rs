@@ -10,7 +10,7 @@ fn main() {
     let mut game_path = steam_apps::find_game_by_id(APP_ID).unwrap().unwrap();
     let mut target_path = PathBuf::from("../contrib");
 
-    for name in &["Crystal Project.exe", "FNA.dll", "Steamworks.NET.dll"] {
+    for name in &["Crystal Project.exe", "FNA.dll"] {
         game_path.push(name);
         target_path.push(name);
 

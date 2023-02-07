@@ -10,9 +10,8 @@ public static class DnlibAssemblyExt {
     public static IMethod ImportHook(this AssemblyDef assembly, AssemblyDef hook, string module, string method) {
         var hookModule = hook.Find(module, false);
         var hookMethod = hookModule.FindMethod(method);
-        if (!hookMethod.IsStatic) throw new System.Exception("Hook methods must be static!");
 
-        var shimMethodName = $"MelodiaHook__{method}";
+        var shimMethodName = $"MelodiaTrampoline$${method}";
         var shimMethod = hookModule.FindMethod(shimMethodName);
         if (shimMethod != null) {
             if (shimMethod.MethodSig != hookMethod.Signature) throw new System.Exception($"Duplicate hook method '{shimMethodName}'??");
@@ -26,24 +25,33 @@ public static class DnlibAssemblyExt {
             var newMethod = new MethodDefUser(
                 shimMethodName, cleanedSig, 
                 MethodImplAttributes.IL | MethodImplAttributes.AggressiveInlining, 
-                MethodAttributes.Public | MethodAttributes.Static
+                MethodAttributes.Public | (hookMethod.IsStatic ? MethodAttributes.Static : 0)
             );
             newMethod.Body = new CilBody();
-            newMethod.Body.MaxStack = (ushort) cleanedSig.Params.Count;
-            for (int i = 0; i < cleanedSig.Params.Count; i++) {
-                if (i == 0) newMethod.Body.Instructions.Add(OpCodes.Ldarg_0.ToInstruction());
-                else if (i == 1) newMethod.Body.Instructions.Add(OpCodes.Ldarg_1.ToInstruction());
-                else if (i == 2) newMethod.Body.Instructions.Add(OpCodes.Ldarg_2.ToInstruction());
-                else if (i == 3) newMethod.Body.Instructions.Add(OpCodes.Ldarg_3.ToInstruction());
-                else if (i < 256) newMethod.Body.Instructions.Add(OpCodes.Ldarg_S.ToInstruction(i));
-                else newMethod.Body.Instructions.Add(OpCodes.Ldarg.ToInstruction(i));
-            }
+            newMethod.PushMethodArgs();
             newMethod.Body.Instructions.Add(OpCodes.Call.ToInstruction(hookMethod));
             newMethod.Body.Instructions.Add(OpCodes.Ret.ToInstruction());
             newMethod.DeclaringType = hookModule;
+
             shimMethod = hookModule.FindMethod(shimMethodName);
         }
 
         return new Importer(assembly.ManifestModule).Import(shimMethod);
+    }
+}
+
+public static class DnlibMethodExt {
+    internal static void PushMethodArgs(this MethodDef method, int head = -1, bool omitThis = false) {
+        if (head == -1) head = method.Body.Instructions.Count;
+        for (int i = (omitThis && !method.IsStatic ? 1 : 0); i < method.Parameters.Count; i++) {
+            if (i == 0) method.Body.Instructions.Insert(head, OpCodes.Ldarg_0.ToInstruction());
+            else if (i == 1) method.Body.Instructions.Insert(head, OpCodes.Ldarg_1.ToInstruction());
+            else if (i == 2) method.Body.Instructions.Insert(head, OpCodes.Ldarg_2.ToInstruction());
+            else if (i == 3) method.Body.Instructions.Insert(head, OpCodes.Ldarg_3.ToInstruction());
+            else if (i < 256) method.Body.Instructions.Insert(head, OpCodes.Ldarg_S.ToInstruction(i));
+            else method.Body.Instructions.Insert(head, OpCodes.Ldarg.ToInstruction(i));
+
+            head += 1;
+        }
     }
 }

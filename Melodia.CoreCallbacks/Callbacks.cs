@@ -13,13 +13,24 @@ public static class Callbacks {
         Log.Trace("Intercepting RestartAppIfNecessary.");
         return false;
     }
+}
 
-    // TODO: Figure out why the signature here can't just be WindowTitleFooter self
-    public static void Hook_WindowTitleFooter_Draw(WindowTitleFooter self) {
+[Patch("Sang.Window.Title.WindowTitleFooter")]
+public sealed class WindowTitleFooterHook {
+    private readonly WindowTitleFooter self;
+    private readonly PluginInfo[] plugins;
+
+    public WindowTitleFooterHook(WindowTitleFooter self)
+    {
+        this.self = self;
+        plugins = CommonInfo.PluginList;
+    }
+
+    [ReplaceMethod("Draw", CallBase = true)]
+    public void Hook_Draw() {
         Graphics.SpriteBatchBegin();
 
         var additionalOffset = 0;
-        var plugins = CommonInfo.PluginList;
         for (var i = plugins.Length - 1; i >= 0; i--) {
             var plugin = plugins[i];
             Fonts.Draw(

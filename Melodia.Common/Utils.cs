@@ -28,8 +28,7 @@ internal interface LogRemoteReceiver {
     public void WriteLogFile(string taggedMsg);
 }
 
-internal class LogRemoteReceiverImpl : PersistantRemoteObject, LogRemoteReceiver
-{
+internal sealed class LogRemoteReceiverImpl : PersistantRemoteObject, LogRemoteReceiver {
     private StreamWriter? outStream;
     public string? LogFileLocation { get => LogFileLocationInternal; }
     public bool ErrorLogged { get; set; } = false;
@@ -65,7 +64,7 @@ internal class LogRemoteReceiverImpl : PersistantRemoteObject, LogRemoteReceiver
     }
 }
 
-internal class LogRemoteReceiverNull : LogRemoteReceiver {
+internal sealed class LogRemoteReceiverNull : LogRemoteReceiver {
     public string? LogFileLocation { get; } = null;
     public bool ErrorLogged { get; set; } = false;
     public void WriteLogFile(string taggedMsg) {}
@@ -175,7 +174,7 @@ public static class Log
     }
 }
 
-public static class IListExtension {
+public static class IListExt {
     public static void AddRange<T>(this IList<T> list, IEnumerable<T> items) {
         if (list == null) throw new ArgumentNullException(nameof(list));
         if (items == null) throw new ArgumentNullException(nameof(items));
@@ -207,5 +206,14 @@ public static class IListExtension {
             count -= 1;
             list.RemoveAt(count);
         }
+    }
+}
+
+public sealed class IdentityEqualityComparer<T> : IEqualityComparer<T> where T : class {
+    public int GetHashCode(T value) {
+        return RuntimeHelpers.GetHashCode(value);
+    }
+    public bool Equals(T left, T right) {
+        return left == right;
     }
 }

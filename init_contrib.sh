@@ -12,5 +12,5 @@ echo "[ Restoring projects... ]"
 cd MelodiaBuildTool || exit 1
     dotnet restore || exit 1
     dotnet msbuild -p:Configuration=Release || exit 1
-    mono bin/Release/net4.5.2/MelodiaPatcher.exe || exit 1
+    mono bin/Release/net4.7.2/MelodiaPatcher.exe || exit 1
 cd .. || exit 1

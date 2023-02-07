@@ -77,7 +77,7 @@ namespace Melodia.CoreCallbacks {
         [Patch("Sang.Window.Title.WindowTitlePressStart")]
         public sealed class WindowTitlePressStartHook : TitleHook {
             private readonly WindowTitlePressStart self;
-            internal override float Visibility { get => self._visibility; }
+            internal override float Visibility { get => self._firstTimeVisibility * self._textVisibility * self._visibility; }
 
             public WindowTitlePressStartHook(WindowTitlePressStart self) {
                 this.self = self;

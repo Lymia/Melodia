@@ -25,7 +25,6 @@ internal static class Program {
             DisallowCodeDownload = true,
             DisallowPublisherPolicy = true
         };
-        setup.PrivateBinPath = gameDirectory;
 
         var appDomain = AppDomain.CreateDomain(appName, null, setup, FULL_TRUST);
 

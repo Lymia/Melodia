@@ -1,13 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net4.5.2</TargetFramework>
+    <TargetFramework>net4.7.2</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
     <Product>MelodiaBootstrap</Product>
     <AssemblyTitle>MelodiaBootstrap</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="TOOLS">

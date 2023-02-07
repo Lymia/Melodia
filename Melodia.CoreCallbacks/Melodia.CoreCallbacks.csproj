@@ -1,13 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net4.5.2</TargetFramework>
+    <TargetFramework>net4.7.2</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>11.0</LangVersion>
 
     <Product>Melodia.CoreCallbacks</Product>
     <AssemblyTitle>Melodia.CoreCallbacks</AssemblyTitle>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="TOOLS">

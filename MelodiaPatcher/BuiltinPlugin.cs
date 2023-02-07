@@ -24,8 +24,7 @@ internal sealed class BuiltinPlugin : Plugin {
         var type = assembly.Find("Sang.Utility.SteamManager", false);
         var method = type.FindMethod("Initialize");
 
-        for (int i = 0; i < method.Body.Instructions.Count; i++)
-        {
+        for (int i = 0; i < method.Body.Instructions.Count; i++) {
             if (method.Body.Instructions[i].OpCode != OpCodes.Call) continue;
             var target = (IMethod)method.Body.Instructions[i].Operand;
             if (target.FullName != RestartAppIfNecessary) continue;

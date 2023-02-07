@@ -11,6 +11,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+internal static class ProgramHelper {
+    internal static void MsgBox(string msg) {
+        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "MelodiaBootstrap", msg, IntPtr.Zero);
+    }
+}
+
 internal static class Program {
     internal static readonly string AssemblyNameString;
     static Program()
@@ -19,10 +25,6 @@ internal static class Program {
         AssemblyNameString = assembly.GetName().Name;
     }
     internal const string VersionString = "0.1.0";
-
-    internal static void MsgBox(string msg) {
-        SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "Melodia", msg, IntPtr.Zero);
-    }
 
     private static void MainBody(string[] args) {
         Log.Trace($"Game Directory: {args[0]}");
@@ -73,7 +75,7 @@ internal static class Program {
     internal static void Main(string[] args)
     {
         if (args.Length < 3) {
-            MsgBox("Please do not execute this application directly. Run Melodia.exe instead.");
+            ProgramHelper.MsgBox("Please do not execute this application directly. Run Melodia.exe instead.");
             return;
         }
 
@@ -90,7 +92,7 @@ internal static class Program {
         }
 
         if (Log.ErrorLogged) {
-            MsgBox("Errors encountered during loading process. A log file will be opened.");
+            ProgramHelper.MsgBox("Errors encountered during loading process. A log file will be opened.");
 
             using (var p = new Process()) {
                 p.StartInfo.UseShellExecute = true;

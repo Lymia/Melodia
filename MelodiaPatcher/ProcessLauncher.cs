@@ -64,6 +64,7 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
         this.resolver = context;
     }
 
+    private readonly Dictionary<string, Assembly?> resolved = new Dictionary<string, Assembly?>();
     private Assembly? ResolveAssembly(Object sender, ResolveEventArgs ev) {
         Log.Debug($"Handling ResolveAssembly event for {ev.Name}");
         
@@ -73,7 +74,10 @@ internal sealed class TargetDomainCallback : PersistantRemoteObject {
         }
 
         string name = ev.Name.Split(',')[0].Trim();
-        return resolver == null ? null : resolver.Value.ResolveAssembly(name);
+        if (!resolved.ContainsKey(name)) {
+            resolved[name] = resolver == null ? null : resolver.Value.ResolveAssembly(name);
+        }
+        return resolved[name];
     }
 }
 
@@ -100,15 +104,12 @@ internal static class ProcessLauncher {
         stopwatch.Start();
 
         Log.Debug(" - Creating application domain.");
-        var setup = new AppDomainSetup
-        {
-            ApplicationBase = options.GameDirectory,
+        var setup = new AppDomainSetup {
+            ApplicationBase = AppDomain.CurrentDomain.BaseDirectory,
             ApplicationName = "Crystal Project",
             DisallowCodeDownload = true,
             DisallowPublisherPolicy = true
         };
-        setup.PrivateBinPath = AppDomain.CurrentDomain.BaseDirectory;
-        setup.PrivateBinPathProbe = "true";
         var appDomain = AppDomain.CreateDomain("Crystal Project", null, setup, FULL_TRUST);
 
         Log.Debug(" - Creating remote callback.");
@@ -131,7 +132,7 @@ internal static class ProcessLauncher {
 
         // Run the actual plugin passes
         foreach (var plugin in options.Plugins) {
-            Log.Debug($"   - Running plugin '{plugin.GetType().FullName}'");
+            Log.Debug($"   - Running plugin '{plugin.GetType().FullName}");
             plugin.Patch(patchContext);
         }
 
@@ -156,6 +157,7 @@ internal static class ProcessLauncher {
 
         Log.Info("[ Launching Crystal Project ]");
         var thread = new Thread(() => {
+            Console.WriteLine(Environment.CurrentDirectory);
             appDomain.ExecuteAssemblyByName("Crystal Project", args);
             Log.Debug("Crystal Project terminated.");
         });

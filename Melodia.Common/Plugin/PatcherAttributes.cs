@@ -77,7 +77,7 @@ public static class DnlibTypeDefPatcherExt {
         
             // Initialize the new field in all constructors
             foreach (var constructor in type.FindConstructors()) {
-                if (constructor.IsIL) {
+                if (constructor.IsIL && !constructor.IsStaticConstructor) {
                     if (constructor.Body.Instructions.Last().GetOpCode() != OpCodes.Ret)
                         throw new Exception("Method body does not end in ret??");
 
@@ -87,6 +87,9 @@ public static class DnlibTypeDefPatcherExt {
                         OpCodes.Call.ToInstruction(importer.Import(newConstructorMethod)),
                         OpCodes.Stfld.ToInstruction(newField),
                     });
+
+                    foreach (var instruction in constructor.Body.Instructions) System.Console.WriteLine(instruction);
+                    System.Console.WriteLine();
                 }
             }
 

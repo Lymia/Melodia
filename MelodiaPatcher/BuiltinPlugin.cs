@@ -2,6 +2,7 @@ using System.Linq;
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
 using Melodia.Common;
+using Melodia.Common.Plugin;
 
 namespace Melodia.Patcher;
 
@@ -14,7 +15,7 @@ internal sealed class BuiltinPlugin : Plugin {
     
     public override bool InvalidatesAchievements => false;
 
-    private const string Callbacks = "Melodia.CoreCallbacks.Callbacks";
+    private const string Callbacks = "Melodia.CoreCallbacks.PrivateImpl.Callbacks";
 
     private const string RestartAppIfNecessary = 
         "System.Boolean Steamworks.SteamAPI::RestartAppIfNecessary(Steamworks.AppId_t)";

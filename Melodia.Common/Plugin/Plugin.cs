@@ -1,4 +1,4 @@
-namespace Melodia.Common;
+namespace Melodia.Common.Plugin;
 
 public interface IPlugin {
     public string DisplayName { get; }

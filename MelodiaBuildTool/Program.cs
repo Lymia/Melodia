@@ -1,7 +1,7 @@
 ﻿namespace Melodia.Patcher;
 
 using System.IO;
-using Melodia.Common;
+using Melodia.Common.Plugin;
 
 internal static class Program {
     internal static void Main(string[] args) {

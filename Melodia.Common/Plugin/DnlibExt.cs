@@ -1,4 +1,4 @@
-namespace Melodia.Common;
+namespace Melodia.Common.Plugin;
 
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
@@ -7,8 +7,8 @@ public static class DnlibAssemblyExt {
     /// <summary>
     /// Imports a reference to a method which may contain circular references.
     /// </summary>
-    public static IMethod ImportHook(this AssemblyDef assembly, AssemblyDef hook, string module, string method) {
-        var hookModule = hook.Find(module, false);
+    public static IMethod ImportHook(this AssemblyDef assembly, AssemblyDef hook, string @class, string method) {
+        var hookModule = hook.Find(@class, false);
         var hookMethod = hookModule.FindMethod(method);
 
         var shimMethodName = $"MelodiaTrampoline$${method}";
@@ -17,10 +17,15 @@ public static class DnlibAssemblyExt {
             if (shimMethod.MethodSig != hookMethod.Signature) throw new System.Exception($"Duplicate hook method '{shimMethodName}'??");
         } else {
             var cleanedSig = hookMethod.MethodSig.Clone();
+            var neededCleaning = false;
             for (int i = 0; i < cleanedSig.Params.Count; i++) {
-                if (cleanedSig.Params[i].DefinitionAssembly.FullName == assembly.FullName)
+                if (cleanedSig.Params[i].DefinitionAssembly.FullName == assembly.FullName) {
                     cleanedSig.Params[i] = hookModule.Module.CorLibTypes.Object;
+                    neededCleaning = true;
+                }
             }
+            if (!neededCleaning) 
+                return new Importer(assembly.ManifestModule).Import(hookMethod);
 
             var newMethod = new MethodDefUser(
                 shimMethodName, cleanedSig, 

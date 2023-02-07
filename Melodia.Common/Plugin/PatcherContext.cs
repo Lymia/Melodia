@@ -1,3 +1,5 @@
+namespace Melodia.Common.Plugin;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,8 +8,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using dnlib.DotNet;
 using dnlib.DotNet.Writer;
-
-namespace Melodia.Common;
 
 [Serializable]
 internal struct AssemblyResolver {
@@ -84,8 +84,10 @@ public sealed class PatcherContext {
         var overrides = new Dictionary<string, byte[]>();
         foreach (var modified in modifiedAssemblies) {
             if (!assemblies.ContainsKey(modified)) continue;
-
             var assembly = assemblies[modified];
+
+            Log.Debug($"   - Finalizing assembly '{assembly.Name}'...");
+
             this.commitPatches(assembly);
             var settings = new ModuleWriterOptions(assembly.ManifestModule);
             var patchedData = new MemoryStream();

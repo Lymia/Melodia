@@ -2,6 +2,7 @@
 
 using Melodia.Common;
 using Melodia.Common.InternalApi;
+using Melodia.Common.Plugin;
 using SDL2;
 using System;
 using System.Collections.Generic;

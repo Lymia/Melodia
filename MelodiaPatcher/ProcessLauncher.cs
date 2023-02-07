@@ -11,6 +11,7 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Reflection;
 using Melodia.Common.InternalApi;
+using Melodia.Common.Plugin;
 
 internal struct LoaderOptions {
     public readonly string GameDirectory;
@@ -130,7 +131,7 @@ internal static class ProcessLauncher {
 
         // Run the actual plugin passes
         foreach (var plugin in options.Plugins) {
-            Log.Debug($"   - Running plugin {plugin.GetType().FullName}");
+            Log.Debug($"   - Running plugin '{plugin.GetType().FullName}'");
             plugin.Patch(patchContext);
         }
 

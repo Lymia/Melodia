@@ -1,6 +1,6 @@
-using dnlib.DotNet;
+namespace Melodia.Common.Plugin;
 
-namespace Melodia.Common;
+using dnlib.DotNet;
 
 public static class FixedPasses {
     public static void OpenInternalClasses(AssemblyDef assembly) {
